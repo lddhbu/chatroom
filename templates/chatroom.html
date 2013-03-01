@@ -13,9 +13,9 @@
     <div class="content">
         <div id="log">
             {% for message in messages %}
-            <span class="time_font">{{message[2]}}</span>
+            <span class="time_font">{{message.get('time')}}</span>
             <br>
-            {{message[0]}}:{{message[1]}}
+            {{message.get('name')}}:{{message.get('message')}}
             <br>
             {% end %}
 

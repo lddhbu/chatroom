@@ -20,7 +20,7 @@ def similar_degrees(s1,s2):
     """
     m=len(s1)
     n=len(s2)
-    d=[[i for i in range(n+1)] for j in [0,1]]
+    d=[[i for i in range(n+1)] for j in [0,1]]#至少会有一个元素
     for i in range(1,m+1):
         d[0][0]=i-1#边界条件，上一次
         d[1][0]=i#边界条件，本次
@@ -45,31 +45,62 @@ class MessageMixin(object):
     clients=set()
     catchs=[]
 
-    def add_client(cls,client):
+    def add_client(self,client):
+        cls=MessageMixin
         cls.clients.add(client)
         now=time.strftime('%Y-%m-%d %H:%M:%S')
-        cls.catchs.append([client.name,'has joined',now])
+        cls.catchs.append({'name':client.name,'message':'has joined','time':now,'id':id(client)})
         for client in cls.clients:
             client.send(tornado.escape.json_encode({'type':1,'id':id(client),'time':now,'user':client.name,'message':'has joined'}))
 
 
-    def remove_client(cls,client):
+    def remove_client(self,client):
+        cls=MessageMixin
         cls.clients.remove(client)
         now=time.strftime('%Y-%m-%d %H:%M:%S')
-        cls.catchs.append([client.name,'has left',now])
+        cls.catchs.append({'name':client.name,'message':'has joined','time':now,'id':id(client)})
         for client in cls.clients:
             client.send(json.dumps({'type':2,'id':id(client),'time':now,'user':client.name,'message':'has left'}))
 
-    def new_message(cls,name,message):
-        now=time.strftime('%Y-%m-%d %H:%M:%S')
-        cls.catchs.append([name,message,now])
-        for client in cls.clients:
-            client.send(json.dumps({'type':3,'time':now,'user':name,'message':message}))
+    def new_message(self,client,message):
+        name=client.name
+        c_id=id(client)
+        if self.is_spam(message,self._get_last_message(c_id)):
+            cls=MessageMixin
+            now=time.strftime('%Y-%m-%d %H:%M:%S')
+            cls.catchs.append({'name':client.name,'message':message,'time':now,'id':id(client)})
+            for client in cls.clients:
+                client.send(json.dumps({'type':3,'time':now,'user':name,'message':message}))
+        else:
+            self.send(json.dumps({'type':0,'message':'请不要灌水'}))
 
-    def is_spam(self):
+    def _get_last_message(self,id):
+        """
+        因为是按时间顺序加入，所以最后一个此id的message即是last one
+        """
+        ret=''
+        for i in reversed(MessageMixin.catchs):
+            if i.get('id')==id:
+                ret=i.get('message')
+                break
+        return ret
+
+
+    def is_spam(self,new_message,last_message):
         """
         有两个限制，一是字符串长度，二是和上一次的发言的相似度
         """
+        length=len(new_message)
+        if length<_SPAM_LEN_LIMIT:
+            ret=False
+        else:
+            degree=similar_degrees(new_message,last_message)
+            print degree
+            if degree>_SPAM_SIM_LIMIT:
+                ret=False
+            else:
+                ret=True
+        return ret
 
 
 class SocketHandler(sockjs.tornado.SockJSConnection,MessageMixin):
@@ -94,7 +125,7 @@ class SocketHandler(sockjs.tornado.SockJSConnection,MessageMixin):
         self.remove_client(self)
 
     def on_message(self,message):
-        self.new_message(self.name,message)
+        self.new_message(self,message)
 
 
 

@@ -18,15 +18,20 @@ $(function() {
 
         conn.onmessage = function(e) {
             var obj = eval("("+ e.data+")");
-            if(obj.type=="1"){
-                var user="<div id='"+obj.id+"'>"+obj.user+"</div>";
-                $("#user").append(user);
+            if(obj.type=="0"){
+                alert("请不要灌水！");
             }
-            else if(obj.type=="2"){
-                $("#"+obj.id).remove();
+            else{
+                if(obj.type=="1"){
+                    var user="<div id='"+obj.id+"'>"+obj.user+"</div>";
+                    $("#user").append(user);
+                }
+                else if(obj.type=="2"){
+                    $("#"+obj.id).remove();
+                }
+                var value="<span class='time_font'>"+obj.time+"<br/></span>"+obj.user+":"+obj.message;
+                log(value);
             }
-            var value="<span class='time_font'>"+obj.time+"<br/></span>"+obj.user+":"+obj.message;
-            log(value);
         };
 
         conn.onclose = function() {
