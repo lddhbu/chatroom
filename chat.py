@@ -4,10 +4,13 @@ try:
 except ImportError:
     import json  # Python 2.6+
 import time
+
 import sockjs.tornado
-import tornado.web
-from base import BaseHandler
 import tornado.escape
+import tornado.web
+
+from base import BaseHandler
+
 
 _SPAM_LEN_LIMIT=5
 _SPAM_SIM_LIMIT=2.0
@@ -41,6 +44,7 @@ class ChatRoomHandler(BaseHandler):
     def get(self):
         self.render("chatroom.html",messages=MessageMixin.catchs,clients=MessageMixin.clients)
 
+
 class MessageMixin(object):
     clients=set()
     catchs=[]
@@ -52,7 +56,6 @@ class MessageMixin(object):
         cls.catchs.append({'name':client.name,'message':'has joined','time':now,'id':id(client)})
         for client in cls.clients:
             client.send(tornado.escape.json_encode({'type':1,'id':id(client),'time':now,'user':client.name,'message':'has joined'}))
-
 
     def remove_client(self,client):
         cls=MessageMixin
@@ -85,7 +88,6 @@ class MessageMixin(object):
                 break
         return ret
 
-
     def is_spam(self,new_message,last_message):
         """
         有两个限制，一是字符串长度，二是和上一次的发言的相似度
@@ -117,7 +119,6 @@ class SocketHandler(sockjs.tornado.SockJSConnection,MessageMixin):
         else:
             self.name=user['name']
             self.add_client(self)
-
 
     def on_close(self):
         """
