@@ -15,6 +15,7 @@ from base import BaseHandler
 _SPAM_LEN_LIMIT=5
 _SPAM_SIM_LIMIT=2.0
 
+
 def similar_degrees(s1,s2):
     """
     检查两个字符串的相似度，抽象为编辑距离问题，基于动态规划思想，时间复杂度为O(mn)，空间复杂度为O(n)。
