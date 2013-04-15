@@ -1,7 +1,10 @@
-from base import BaseHandler
 import tornado.auth
 import tornado.escape
 import tornado.web
+
+from base import BaseHandler
+
+
 class AuthLoginHandler(BaseHandler,tornado.auth.GoogleMixin):
 	@tornado.web.asynchronous
 	def get(self):
